@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class SyuctacmForumApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(SyuctacmForumApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(SyuctacmForumApplication.class, args);
+    }
 
 }

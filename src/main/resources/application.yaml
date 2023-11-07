@@ -1,1 +1,21 @@
+server:
+  port: 7070
+spring:
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://127.0.0.1:3306/Syuct_forum?useUnicode=true&characterEncoding=UTF-8&useSSL=false&autoReconnect=true&failOverReadOnly=false&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      port: 6379
+      password: lxc123
+      host: 192.168.1.103
 
+  mail:
+    username: 704379838@qq.com
+    password: hlkytayysxynbcaa
+    host: smtp.qq.com
+logging:
+  level:
+    com.hmdp: debug
