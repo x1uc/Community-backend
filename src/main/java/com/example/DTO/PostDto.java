@@ -1,2 +1,11 @@
-package com.example.DTO;public class PostDto {
+package com.example.DTO;
+
+
+import com.example.Entity.Post;
+import lombok.Data;
+
+@Data
+public class PostDto {
+    private Post post;
+    private String UserName;
 }

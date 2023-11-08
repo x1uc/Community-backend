@@ -1,5 +1,6 @@
 package com.example.Controller;
 
+import com.example.Entity.Post;
 import com.example.Service.PostService;
 import com.example.common.Result;
 import jakarta.annotation.Resource;
@@ -10,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("post")
+@RequestMapping("/post")
 @ResponseBody
 @CrossOrigin
 public class PostController {
@@ -21,6 +22,20 @@ public class PostController {
     public Result PostPublish(HttpServletRequest request, @RequestBody Map<String, String> map) {
         return postService.PostPublish(request, map);
     }
+
+    @PostMapping("/page")
+    public Result getPage() {
+        return postService.getPage();
+    }
+
+    @GetMapping
+    public Result getPost(Integer id) {
+        System.out.println(id);
+        Post byId = postService.getById(id);
+        return new Result().success("ok", byId);
+    }
+
+
 
 
 }
