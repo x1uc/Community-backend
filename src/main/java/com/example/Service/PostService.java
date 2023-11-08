@@ -10,5 +10,9 @@ import java.util.Map;
 public interface PostService extends IService<Post> {
     Result PostPublish(HttpServletRequest request, Map<String, String> map);
 
-    Result getPage();
+    Result getPage(Integer pageSize, Integer currentPage);
+
+    Result getContent(Long id);
+
+    String PostIdToEmail(Long id);
 }

@@ -128,4 +128,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return new Result().fail("验证码错误！");
         }
     }
+
+
+    @Override
+    //Email转换用户ID
+    public Long emailToId(String email) {
+        LambdaUpdateWrapper<User> lambdaUpdateWrapper1 = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper1.eq(User::getEmail, email);
+        User one1 = this.getOne(lambdaUpdateWrapper1);
+        Long currentId = one1.getId();
+        return currentId;
+    }
+
+
 }

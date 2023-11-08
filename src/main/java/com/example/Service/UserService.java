@@ -13,4 +13,6 @@ public interface UserService extends IService<User> {
     Result getCode(Map<String, String> map) throws MessagingException;
 
     Result register(Map<String, String> map);
+
+     Long emailToId(String email);
 }

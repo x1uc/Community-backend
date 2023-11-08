@@ -24,18 +24,14 @@ public class PostController {
     }
 
     @PostMapping("/page")
-    public Result getPage() {
-        return postService.getPage();
+    public Result getPage(@RequestBody Map<String, Integer> map) {
+        Integer pageSize = map.get("pageSize");
+        Integer currentPage = map.get("currentPage");
+        return postService.getPage(pageSize, currentPage);
     }
 
     @GetMapping
-    public Result getPost(Integer id) {
-        System.out.println(id);
-        Post byId = postService.getById(id);
-        return new Result().success("ok", byId);
+    public Result getPost(Long id) {
+        return postService.getContent(id);
     }
-
-
-
-
 }
