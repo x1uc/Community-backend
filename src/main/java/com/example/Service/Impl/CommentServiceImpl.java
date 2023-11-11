@@ -9,6 +9,7 @@ import com.example.Mapper.CommentMapper;
 import com.example.Service.CommentService;
 import com.example.Service.PostService;
 import com.example.Service.UserService;
+import com.example.common.GetUser;
 import com.example.common.Result;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,6 +36,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private GetUser getUser;
 
     @PostMapping("/add")
     public Result addComment(HttpServletRequest request, @RequestBody Map<String, Object> map) {
@@ -76,5 +80,32 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         this.save(comment);
 
         return new Result().success("评论成功！");
+    }
+
+    @Override
+    public Result addChildComment(HttpServletRequest request, Map<String, Object> map) {
+        Long EntityId = Long.valueOf((String) map.get("EntityId"));
+        Long TargetId = Long.valueOf((String) map.get("TargetId"));
+        String content = (String) map.get("content");
+        Integer type = 2;
+
+        User user = getUser.GET_USER(request);
+        if (user == null) {
+            return new Result().fail("未登录");
+        }
+        Comment comment = new Comment();
+        //设置回复对象
+        comment.setTargetId(TargetId);
+        //设置发起评论的人
+        comment.setUserId(user.getId());
+        //设置评论内容
+        comment.setContent(content);
+        //设置 回复的主题对象
+        comment.setEntityId(EntityId);
+        comment.setCreateTime(LocalDateTime.now());
+        comment.setEntityType(2);
+        this.save(comment);
+
+        return new Result().success("评论成功");
     }
 }

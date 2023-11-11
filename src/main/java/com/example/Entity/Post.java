@@ -12,9 +12,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class Post {
-   //@JsonSerialize(using = ToStringSerializer.class)
     private Long id;
-
     private String userEmail;
     private String title;
     private String content;
@@ -23,5 +21,6 @@ public class Post {
     private Integer tag;
     private LocalDateTime createTime;
     private Integer commentCount;
+    private Integer liked;
     private double score;
 }

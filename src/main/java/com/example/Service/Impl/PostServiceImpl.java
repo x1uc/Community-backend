@@ -1,5 +1,6 @@
 package com.example.Service.Impl;
 
+import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -14,9 +15,12 @@ import com.example.Mapper.PostMapper;
 import com.example.Service.CommentService;
 import com.example.Service.PostService;
 import com.example.Service.UserService;
+import com.example.common.GetUser;
 import com.example.common.Result;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -27,7 +31,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.example.Constant.RedisConstant.POST_LIKED_CACHE;
+
 @Service
+@Slf4j
 public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -37,6 +44,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Resource
     private CommentService commentService;
+
+    @Resource
+    private GetUser getUser;
 
 
     @Override
@@ -106,7 +116,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 for (Comment reply : childContent) {
                     ReplyDto replyDto = new ReplyDto();
                     replyDto.setComment(reply);
-                    replyDto.setUser(userService.getById(comment.getUserId()));
+                    replyDto.setUser(userService.getById(reply.getUserId()));
                     replyDto.setTarget(userService.getById(reply.getTargetId()));
                     replyDtoList.add(replyDto);
                 }
@@ -126,5 +136,45 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         return one.getUserEmail();
     }
 
+    @Override
+    public Result updateLiked(HttpServletRequest request, Long id) {
+        String postKey = POST_LIKED_CACHE + id;
+        User user = getUser.GET_USER(request);
+        if (user == null) {
+            return new Result().fail("未登录或登录过期");
+        }
+        Boolean member = stringRedisTemplate.opsForSet().isMember(postKey, String.valueOf(user.getId()));
+        if (BooleanUtil.isTrue(member)) {
+            stringRedisTemplate.opsForSet().remove(postKey, String.valueOf(user.getId()));
+            LambdaUpdateWrapper<Post> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            lambdaUpdateWrapper.setSql("liked = liked - 1");
+            lambdaUpdateWrapper.eq(Post::getId, id);
+            this.update(lambdaUpdateWrapper);
+        } else {
+            stringRedisTemplate.opsForSet().add(postKey, String.valueOf(user.getId()));
+            LambdaUpdateWrapper<Post> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            lambdaUpdateWrapper.setSql("liked = liked + 1");
+            lambdaUpdateWrapper.eq(Post::getId, id);
+            this.update(lambdaUpdateWrapper);
+
+        }
+        return new Result().success("更新成功！");
+    }
+
+    @Override
+    public Result judgeLike(HttpServletRequest request, Long id) {
+        String postKey = POST_LIKED_CACHE + id;
+        User user = getUser.GET_USER(request);
+        if (user == null) {
+            return new Result().fail("未登录或登录过期");
+        } else {
+            Boolean member = stringRedisTemplate.opsForSet().isMember(postKey, String.valueOf(user.getId()));
+            if (BooleanUtil.isTrue(member)) {
+                return new Result().success(true);
+            } else {
+                return new Result().success(false);
+            }
+        }
+    }
 
 }

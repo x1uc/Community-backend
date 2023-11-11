@@ -15,4 +15,8 @@ public interface PostService extends IService<Post> {
     Result getContent(Long id);
 
     String PostIdToEmail(Long id);
+
+    Result updateLiked(HttpServletRequest request, Long id);
+
+    Result judgeLike(HttpServletRequest request, Long id);
 }

@@ -11,4 +11,6 @@ import java.util.Map;
 
 public interface CommentService extends IService<Comment> {
     Result addComment(HttpServletRequest request, Map<String, Object> map);
+
+    Result addChildComment(HttpServletRequest request, Map<String, Object> map);
 }

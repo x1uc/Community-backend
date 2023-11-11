@@ -36,8 +36,12 @@ public class CommentController {
 
     @PostMapping("/add")
     public Result addComment(HttpServletRequest request, @RequestBody Map<String, Object> map) {
-
         return commentService.addComment(request, map);
+    }
+
+    @PostMapping("/addChild")
+    public Result addChildComment(HttpServletRequest request, @RequestBody Map<String, Object> map) {
+        return commentService.addChildComment(request, map);
     }
 
 

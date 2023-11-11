@@ -34,4 +34,16 @@ public class PostController {
     public Result getPost(Long id) {
         return postService.getContent(id);
     }
+
+    @GetMapping("/like")
+    public Result updateLiked(HttpServletRequest request, Long id) {
+        return postService.updateLiked(request, id);
+    }
+
+    @GetMapping("/judgeLike")
+    public Result judgeLike(HttpServletRequest request, Long id) {
+        return postService.judgeLike(request, id);
+    }
+
+
 }
