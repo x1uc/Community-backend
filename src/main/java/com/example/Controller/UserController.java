@@ -15,7 +15,6 @@ import java.util.Set;
 @RestController
 @RequestMapping("/user")
 @ResponseBody
-@CrossOrigin
 public class UserController {
 
     @Resource

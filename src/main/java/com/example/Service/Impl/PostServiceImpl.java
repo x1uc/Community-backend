@@ -9,13 +9,16 @@ import com.example.DTO.PostContentDto;
 import com.example.DTO.PostDto;
 import com.example.DTO.ReplyDto;
 import com.example.Entity.Comment;
+import com.example.Entity.Message;
 import com.example.Entity.Post;
 import com.example.Entity.User;
 import com.example.Mapper.PostMapper;
+import com.example.MsgQueue.Produce;
 import com.example.Service.CommentService;
 import com.example.Service.PostService;
 import com.example.Service.UserService;
 import com.example.common.GetUser;
+import com.example.common.PostToUser;
 import com.example.common.Result;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,6 +51,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Resource
     private GetUser getUser;
+
+    @Resource
+    private PostToUser postToUser;
+
+    @Resource
+    private Produce produce;
 
 
     @Override
@@ -136,6 +146,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         return one.getUserEmail();
     }
 
+    /**
+     * @param request
+     * @param id      文章的ID
+     * @return
+     */
     @Override
     public Result updateLiked(HttpServletRequest request, Long id) {
         String postKey = POST_LIKED_CACHE + id;
@@ -144,13 +159,25 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             return new Result().fail("未登录或登录过期");
         }
         Boolean member = stringRedisTemplate.opsForSet().isMember(postKey, String.valueOf(user.getId()));
+
         if (BooleanUtil.isTrue(member)) {
+            //如果是取消点赞
             stringRedisTemplate.opsForSet().remove(postKey, String.valueOf(user.getId()));
             LambdaUpdateWrapper<Post> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             lambdaUpdateWrapper.setSql("liked = liked - 1");
             lambdaUpdateWrapper.eq(Post::getId, id);
             this.update(lambdaUpdateWrapper);
         } else {
+            Long fromId = user.getId();
+            User toUser = postToUser.run(id);
+
+            Message message = new Message();
+            message.setEntityId(id); //设置主体Id
+            message.setFromId(fromId);
+            message.setToId(toUser.getId());
+            message.setCreateTime(new Date(System.currentTimeMillis()));
+            produce.producerMessage("like", message);
+
             stringRedisTemplate.opsForSet().add(postKey, String.valueOf(user.getId()));
             LambdaUpdateWrapper<Post> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             lambdaUpdateWrapper.setSql("liked = liked + 1");
