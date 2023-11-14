@@ -40,8 +40,8 @@ public class RabbitmqConfig {
             key = {"comment"}
     )
     )
-    public void addABinding2() {
-        return;
+    public void addABinding2(Message message) {
+        consume.solveComment(message);
     }
 
 

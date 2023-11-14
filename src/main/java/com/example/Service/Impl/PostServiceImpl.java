@@ -176,6 +176,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             message.setFromId(fromId);
             message.setToId(toUser.getId());
             message.setCreateTime(new Date(System.currentTimeMillis()));
+            message.setType(1);
             produce.producerMessage("like", message);
 
             stringRedisTemplate.opsForSet().add(postKey, String.valueOf(user.getId()));

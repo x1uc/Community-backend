@@ -15,7 +15,6 @@ public class Consume {
     private MessageService messageService;
 
     public void solveLike(Message message) {
-        log.info("接收到一个消息");
         LambdaUpdateWrapper<Message> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(Message::getFromId, message.getFromId());
         lambdaUpdateWrapper.eq(Message::getEntityId, message.getEntityId());
@@ -27,4 +26,10 @@ public class Consume {
             messageService.save(message);
         }
     }
+
+    public void solveComment(Message message) {
+        messageService.save(message);
+    }
+
+
 }

@@ -30,4 +30,14 @@ public class MessageController {
         }
         return messageService.MsgLike(user);
     }
+
+    @GetMapping("/comment")
+    public Result MessageComment(HttpServletRequest httpServletRequest) {
+        User user = getUser.GET_USER(httpServletRequest);
+        if (user == null) {
+            return new Result().fail("未登录或登录过期");
+        }
+        return messageService.MsgComment(user);
+    }
+
 }

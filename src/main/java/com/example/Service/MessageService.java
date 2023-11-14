@@ -7,4 +7,6 @@ import com.example.common.Result;
 
 public interface MessageService extends IService<Message> {
     Result MsgLike(User user);
+
+    Result MsgComment(User user);
 }

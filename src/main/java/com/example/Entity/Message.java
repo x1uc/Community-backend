@@ -15,4 +15,5 @@ public class Message {
     private String content;
     private Integer status;
     private Date createTime;
+    private Integer type;
 }

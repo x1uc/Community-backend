@@ -3,9 +3,11 @@ package com.example.Service.Impl;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.Entity.Comment;
+import com.example.Entity.Message;
 import com.example.Entity.Post;
 import com.example.Entity.User;
 import com.example.Mapper.CommentMapper;
+import com.example.MsgQueue.Produce;
 import com.example.Service.CommentService;
 import com.example.Service.PostService;
 import com.example.Service.UserService;
@@ -17,10 +19,12 @@ import jdk.jfr.Label;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Map;
 
 
@@ -40,7 +44,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     @Resource
     private GetUser getUser;
 
+    @Resource
+    private Produce produce;
+
     @PostMapping("/add")
+    @Transactional
     public Result addComment(HttpServletRequest request, @RequestBody Map<String, Object> map) {
 
         Integer type = (Integer) map.get("type");
@@ -77,12 +85,23 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setEntityType(type);    // 设置 回复的主体是文章还是评论
         comment.setTargetId(targetId);  //设置 恢复对象的ID
         comment.setContent(Content);
+
+        Message message = new Message();
+        message.setEntityId(PostId);
+        message.setToId(targetId);
+        message.setFromId(currentId);
+        message.setContent(Content);
+        message.setCreateTime(new Date(System.currentTimeMillis()));
+        message.setType(2);
+        produce.producerMessage("comment", message);
+
         this.save(comment);
 
         return new Result().success("评论成功！");
     }
 
     @Override
+    @Transactional
     public Result addChildComment(HttpServletRequest request, Map<String, Object> map) {
         Long EntityId = Long.valueOf((String) map.get("EntityId"));
         Long TargetId = Long.valueOf((String) map.get("TargetId"));
@@ -104,6 +123,16 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setEntityId(EntityId);
         comment.setCreateTime(LocalDateTime.now());
         comment.setEntityType(2);
+
+        Message message = new Message();
+        message.setEntityId(EntityId);
+        message.setToId(TargetId);
+        message.setFromId(user.getId());
+        message.setContent(content);
+        message.setCreateTime(new Date(System.currentTimeMillis()));
+        message.setType(2);
+        produce.producerMessage("comment", message);
+
         this.save(comment);
 
         return new Result().success("评论成功");
