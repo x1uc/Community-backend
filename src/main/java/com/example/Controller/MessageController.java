@@ -8,9 +8,9 @@ import com.example.common.GetUser;
 import com.example.common.Result;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/message")
@@ -22,22 +22,45 @@ public class MessageController {
     @Resource
     private GetUser getUser;
 
-    @GetMapping("/like")
-    public Result MsgLike(HttpServletRequest httpServletRequest) {
+    @PostMapping("/like")
+    public Result MsgLike(HttpServletRequest httpServletRequest, @RequestBody Map<String, String> map) {
         User user = getUser.GET_USER(httpServletRequest);
         if (user == null) {
             return new Result().fail("未登录或登录过期");
         }
-        return messageService.MsgLike(user);
+        String currentPage = map.get("currentPage");
+        String pageSize = map.get("pageSize");
+        return messageService.MsgLike(user, currentPage, pageSize);
     }
 
-    @GetMapping("/comment")
-    public Result MessageComment(HttpServletRequest httpServletRequest) {
+    @PostMapping("/comment")
+    public Result MessageComment(HttpServletRequest httpServletRequest, @RequestBody Map<String, String> map) {
         User user = getUser.GET_USER(httpServletRequest);
         if (user == null) {
             return new Result().fail("未登录或登录过期");
         }
-        return messageService.MsgComment(user);
+        String currentPage = map.get("currentPage");
+        String pageSize = map.get("pageSize");
+        return messageService.MsgComment(user, currentPage, pageSize);
     }
+
+    @GetMapping("/unread")
+    public Result MessageUnRead(HttpServletRequest httpServletRequest) {
+        User user = getUser.GET_USER(httpServletRequest);
+        if (user == null) {
+            return new Result().fail("未登录或登录过期");
+        }
+        return messageService.MessageUnRead(user);
+    }
+
+    @PostMapping("/unComment")
+    public Result MessageUnComment(HttpServletRequest httpServletRequest) {
+        User user = getUser.GET_USER(httpServletRequest);
+        if (user == null) {
+            return new Result().fail("未登录或登录过期");
+        }
+        return messageService.MessageUnComment(user);
+    }
+
 
 }

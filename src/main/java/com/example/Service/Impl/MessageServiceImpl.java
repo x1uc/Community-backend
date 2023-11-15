@@ -13,13 +13,17 @@ import com.example.Service.CommentService;
 import com.example.Service.MessageService;
 import com.example.Service.PostService;
 import com.example.Service.UserService;
+import com.example.Vo.MessageVo;
 import com.example.common.Result;
 import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.example.Constant.CommonConstant.*;
 
 @Service
 public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> implements MessageService {
@@ -33,22 +37,31 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     private CommentService commentService;
 
     @Override
-    public Result MsgLike(User user) {
+    public Result MsgLike(User user, String currentPage, String pageSize) {
         Long id = user.getId();
 
         LambdaUpdateWrapper<Message> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
 //        lambdaUpdateWrapper.eq(Message::getStatus, 0);
         lambdaUpdateWrapper.eq(Message::getToId, id);
         lambdaUpdateWrapper.orderByDesc(Message::getCreateTime);
-        lambdaUpdateWrapper.eq(Message::getType, 1);
-        List<Message> list = this.list(lambdaUpdateWrapper);
+        lambdaUpdateWrapper.eq(Message::getType, MESSAGE_LIKE);
+        List<Message> temp = this.list(lambdaUpdateWrapper);
+        List<Message> list = new ArrayList<>();
+        Integer likeTotal = temp.size();
 
+        Integer start = (Integer.valueOf(currentPage) - 1) * (Integer.valueOf(pageSize));
+        Integer end = start + Integer.valueOf(pageSize) - 1;
+        for (int i = 0; i < temp.size(); i++) {
+            if (i >= start && i <= end) {
+                list.add(temp.get(i));
+            }
+        }
         //更新读取状态
         LambdaUpdateWrapper<Message> lambdaUpdateWrapperSql = new LambdaUpdateWrapper();
         lambdaUpdateWrapperSql.setSql("status = 1");
         lambdaUpdateWrapperSql.eq(Message::getToId, id);
-        lambdaUpdateWrapperSql.eq(Message::getType, 1);
-        lambdaUpdateWrapperSql.eq(Message::getStatus, 0);
+        lambdaUpdateWrapperSql.eq(Message::getType, MESSAGE_LIKE);
+        lambdaUpdateWrapperSql.eq(Message::getStatus, MESSAGE_UNREAD);
         this.update(lambdaUpdateWrapperSql);
 
         List<MessageDto> answer = list.stream().map(item -> {
@@ -73,23 +86,37 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             messageDto.setEntityId(item.getEntityId());
             return messageDto;
         }).collect(Collectors.toList());
-        return new Result().success(answer);
+        MessageVo messageVo = new MessageVo();
+        messageVo.setRecords(answer);
+        messageVo.setTotal(likeTotal);
+        return new Result().success(messageVo);
     }
 
     @Override
-    public Result MsgComment(User user) {
+    public Result MsgComment(User user, String currentPage, String pageSize) {
         //获取该用户的评论列表
         LambdaQueryWrapper<Message> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(Message::getToId, user.getId());
         lambdaQueryWrapper.orderByDesc(Message::getCreateTime);
-        lambdaQueryWrapper.eq(Message::getType, 2);
-        List<Message> list = this.list(lambdaQueryWrapper);
+        lambdaQueryWrapper.eq(Message::getType, MESSAGE_COMMENT);
+        List<Message> temp = this.list(lambdaQueryWrapper);
+        List<Message> list = new ArrayList<>();
+        Integer likeTotal = temp.size();
+
+        Integer start = (Integer.valueOf(currentPage) - 1) * (Integer.valueOf(pageSize));
+        Integer end = start + Integer.valueOf(pageSize) - 1;
+        for (int i = 0; i < temp.size(); i++) {
+            if (i >= start && i <= end) {
+                list.add(temp.get(i));
+            }
+        }
+
         //更新该用户的读取状态
         LambdaUpdateWrapper<Message> lambdaUpdateWrapperSql = new LambdaUpdateWrapper();
-        lambdaUpdateWrapperSql.setSql("status = 1");
+        lambdaUpdateWrapperSql.setSql("status = " + MESSAGE_READ);
         lambdaUpdateWrapperSql.eq(Message::getToId, user.getId());
-        lambdaUpdateWrapperSql.eq(Message::getStatus, 0);
-        lambdaUpdateWrapperSql.eq(Message::getType, 2);
+        lambdaUpdateWrapperSql.eq(Message::getStatus, MESSAGE_UNREAD);
+        lambdaUpdateWrapperSql.eq(Message::getType, MESSAGE_COMMENT);
         this.update(lambdaUpdateWrapperSql);
 
 
@@ -126,6 +153,30 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             messageDto.setEntityId(entityId);
             return messageDto;
         }).collect(Collectors.toList());
-        return new Result().success(answer);
+        MessageVo messageVo = new MessageVo();
+        messageVo.setRecords(answer);
+        messageVo.setTotal(likeTotal);
+        return new Result().success(messageVo);
+    }
+
+    @Override
+    public Result MessageUnRead(User user) {
+        Long userId = user.getId();
+        LambdaQueryWrapper<Message> lambdaQueryWrapper = new LambdaQueryWrapper();
+        lambdaQueryWrapper.eq(Message::getToId, userId);
+        lambdaQueryWrapper.eq(Message::getStatus, MESSAGE_UNREAD);
+        long count = this.count(lambdaQueryWrapper);
+        return new Result().success(count);
+    }
+
+    @Override
+    public Result MessageUnComment(User user) {
+        Long userId = user.getId();
+        LambdaQueryWrapper<Message> lambdaQueryWrapper = new LambdaQueryWrapper();
+        lambdaQueryWrapper.eq(Message::getToId, userId);
+        lambdaQueryWrapper.eq(Message::getType, MESSAGE_COMMENT);
+        lambdaQueryWrapper.eq(Message::getStatus, MESSAGE_UNREAD);
+        long count = this.count(lambdaQueryWrapper);
+        return new Result().success(count);
     }
 }

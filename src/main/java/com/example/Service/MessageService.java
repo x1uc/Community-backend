@@ -6,7 +6,11 @@ import com.example.Entity.User;
 import com.example.common.Result;
 
 public interface MessageService extends IService<Message> {
-    Result MsgLike(User user);
+    Result MsgLike(User user, String currentPage, String pageSize);
 
-    Result MsgComment(User user);
+    Result MsgComment(User user, String currentPage, String pageSize);
+
+    Result MessageUnRead(User user);
+
+    Result MessageUnComment(User user);
 }

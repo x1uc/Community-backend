@@ -1,6 +1,8 @@
 package com.example.Service.Impl;
 
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.example.Constant.RedisConstant.POST_BLOG_CACHE;
 import static com.example.Constant.RedisConstant.POST_LIKED_CACHE;
 
 @Service
@@ -91,6 +94,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 通过文章id获取 作者邮箱
         //通过邮箱获取 作者id
         //通过作者id获得 作者name
+        String ObjectStr = stringRedisTemplate.opsForValue().get(POST_BLOG_CACHE + id);
+        if (StrUtil.isNotBlank(ObjectStr)) {
+            return new Result().success(JSONUtil.toBean(ObjectStr, PostContentDto.class));
+        }
         String email = this.PostIdToEmail(id);
         Long UserId = userService.emailToId(email);
         User user = userService.getById(UserId);
@@ -135,6 +142,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             }
             postContentDto.setComment(commentDtoList);
         }
+        String postContent = JSONUtil.toJsonStr(postContentDto);
+        stringRedisTemplate.opsForValue().set(POST_BLOG_CACHE + id, postContent);
+
         return new Result(200, "", postContentDto);
     }
 
@@ -184,7 +194,6 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             lambdaUpdateWrapper.setSql("liked = liked + 1");
             lambdaUpdateWrapper.eq(Post::getId, id);
             this.update(lambdaUpdateWrapper);
-
         }
         return new Result().success("更新成功！");
     }

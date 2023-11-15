@@ -7,6 +7,8 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @Slf4j
 public class Consume {
@@ -18,10 +20,8 @@ public class Consume {
         LambdaUpdateWrapper<Message> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(Message::getFromId, message.getFromId());
         lambdaUpdateWrapper.eq(Message::getEntityId, message.getEntityId());
-        Message msg = messageService.getOne(lambdaUpdateWrapper);
-        if (msg != null) {
-            return;
-        } else {
+        List<Message> msg = messageService.list(lambdaUpdateWrapper);
+        if (msg == null || msg.isEmpty()) {
             message.setContent("点赞");
             messageService.save(message);
         }
