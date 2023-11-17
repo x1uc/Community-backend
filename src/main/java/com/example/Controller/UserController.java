@@ -1,14 +1,19 @@
 package com.example.Controller;
 
 
+import com.example.Entity.User;
 import com.example.Service.UserService;
+import com.example.common.GetUser;
 import com.example.common.Result;
 import jakarta.annotation.Resource;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,5 +40,20 @@ public class UserController {
         return userService.register(map);
     }
 
+
+    @PostMapping("/upload")
+    public Result upload() {
+        return null;
+    }
+
+    @GetMapping("/avatar")
+    public Result getAvatar(HttpServletRequest request) {
+        return userService.getAvatar(request);
+    }
+
+    @PostMapping("/avatar")
+    public Result setAvatar(HttpServletRequest request, MultipartFile file) throws IOException {
+        return userService.setAvatar(request, file);
+    }
 
 }

@@ -1,6 +1,7 @@
 package com.example.Service.Impl;
 
 import cn.hutool.core.lang.UUID;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.Constant.RedisConstant;
@@ -9,15 +10,24 @@ import com.example.Mapper.UserMapper;
 import com.example.Service.UserService;
 import com.example.Util.EncryptionUtil;
 import com.example.Util.MailUtil;
+import com.example.common.GetUser;
 import com.example.common.Result;
 import jakarta.annotation.Resource;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.beans.EventHandler;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.EventListener;
 import java.util.Map;
 import java.util.Random;
@@ -37,6 +47,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Resource
     private EncryptionUtil encryptionUtil;
 
+    @Lazy
+    @Resource
+    private GetUser getUser;
+
+    @Value("${resource.path}")
+    private String class_path;
 
     @Override
     public Result login(Map<String, String> map) {
@@ -140,5 +156,48 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return currentId;
     }
 
+    @Override
+    public Result getAvatar(HttpServletRequest request) {
+        User user = getUser.GET_USER(request);
+        if (user == null) {
+            return new Result().fail("未登录");
+        }
+        return new Result().success("", user.getAvatar());
+    }
+
+    @Override
+    public Result setAvatar(HttpServletRequest request, MultipartFile file) throws IOException {
+        User user = getUser.GET_USER(request);
+        if (user == null) {
+            return new Result().fail("未登录");
+        }
+        String path = class_path;
+        String dir_path = path + "/src/main/resources/static/picture/";
+
+        File targetFile = new File(dir_path);
+        if (!targetFile.exists())
+            targetFile.mkdirs();
+
+        String img_path = dir_path;
+        String uuid = String.valueOf(UUID.randomUUID(true));
+        img_path += uuid;
+        String filename = file.getOriginalFilename();
+        String suffix = filename.substring(filename.lastIndexOf("."));
+        if (StrUtil.isBlank(suffix)) {
+            return new Result().fail("照片格式错误");
+        }
+
+        byte[] fileBytes = file.getBytes();
+        FileOutputStream out = new FileOutputStream(img_path + suffix);
+        out.write(fileBytes);
+        out.flush();
+        out.close();
+
+        LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.eq(User::getId, user.getId());
+        lambdaUpdateWrapper.setSql("avatar = " + "\'" + "static/picture/" + uuid + suffix + "\'");
+        this.update(lambdaUpdateWrapper);
+        return new Result().success("更换成功！");
+    }
 
 }

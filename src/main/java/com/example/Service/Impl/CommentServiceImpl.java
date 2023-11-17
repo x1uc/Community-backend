@@ -27,6 +27,8 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 
+import static com.example.Constant.RedisConstant.POST_BLOG_CACHE;
+
 
 @Service
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
@@ -95,6 +97,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         message.setType(2);
         produce.producerMessage("comment", message);
 
+        stringRedisTemplate.delete(POST_BLOG_CACHE);
         this.save(comment);
 
         return new Result().success("评论成功！");
@@ -133,6 +136,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         message.setType(2);
         produce.producerMessage("comment", message);
 
+        stringRedisTemplate.delete(POST_BLOG_CACHE);
         this.save(comment);
 
         return new Result().success("评论成功");

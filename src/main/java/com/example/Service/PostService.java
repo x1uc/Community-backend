@@ -12,7 +12,7 @@ public interface PostService extends IService<Post> {
 
     Result getPage(Integer pageSize, Integer currentPage);
 
-    Result getContent(Long id);
+    Result getContent(Long id) throws InterruptedException;
 
     String PostIdToEmail(Long id);
 

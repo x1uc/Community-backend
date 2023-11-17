@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.DTO.MessageDto;
+import com.example.DTO.MyLikeDto;
 import com.example.Entity.Comment;
 import com.example.Entity.Message;
 import com.example.Entity.Post;
@@ -14,8 +15,11 @@ import com.example.Service.MessageService;
 import com.example.Service.PostService;
 import com.example.Service.UserService;
 import com.example.Vo.MessageVo;
+import com.example.Vo.MyLikeVo;
+import com.example.common.GetUser;
 import com.example.common.Result;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +39,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     @Resource
     private CommentService commentService;
+
+    @Resource
+    private GetUser getUser;
 
     @Override
     public Result MsgLike(User user, String currentPage, String pageSize) {
@@ -178,5 +185,48 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         lambdaQueryWrapper.eq(Message::getStatus, MESSAGE_UNREAD);
         long count = this.count(lambdaQueryWrapper);
         return new Result().success(count);
+    }
+
+    @Override
+    public Result getMyLikePost(HttpServletRequest httpServletRequest, Integer currentPage, Integer pageSize) {
+        User user = getUser.GET_USER(httpServletRequest);
+        if (user == null) {
+            return new Result().fail("未登录");
+        }
+        Long userId = user.getId();
+
+        LambdaQueryWrapper<Message> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(Message::getFromId, userId);
+        lambdaQueryWrapper.eq(Message::getType, MESSAGE_LIKE);
+        List<Message> list = this.list(lambdaQueryWrapper);
+        Integer total = list.size();
+
+
+        Integer start = (Integer.valueOf(currentPage) - 1) * Integer.valueOf(pageSize);
+        Integer end = start + Integer.valueOf(pageSize) - 1;
+        List<MyLikeDto> answer = new ArrayList<>();
+
+        for (int i = start; i <= end; i++) {
+            if (i < list.size()) {
+                MyLikeDto myLikeDto = new MyLikeDto();
+                Long entityId = list.get(i).getEntityId();
+                myLikeDto.setEntityId(entityId);
+
+                LambdaUpdateWrapper<Post> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                lambdaUpdateWrapper.eq(Post::getId, entityId);
+                Post post = postService.getOne(lambdaUpdateWrapper);
+                myLikeDto.setTitle(post.getTitle());
+
+                answer.add(myLikeDto);
+            }
+        }
+
+        MyLikeVo myLikeVo = new MyLikeVo();
+
+        myLikeVo.setMyLikeList(answer);
+        myLikeVo.setTotal(total);
+
+        return new Result().success(myLikeVo);
+
     }
 }

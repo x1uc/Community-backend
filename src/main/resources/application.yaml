@@ -28,4 +28,12 @@ spring:
 
 logging:
   level:
-    com.hmdp: debug
+    com.example: debug
+
+resource:
+  path: D:/SpringBoot/Syuctacm_forum
+
+redisConfig:
+  address: redis://192.168.1.103:6379
+  password: lxc123
+

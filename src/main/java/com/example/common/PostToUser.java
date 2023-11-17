@@ -22,7 +22,7 @@ public class PostToUser {
     @Resource
     private UserService userService;
 
-    public User run(Long id) {
+    public User run(Long id) { // id为post的id
         LambdaUpdateWrapper<Post> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(Post::getId, id);
         Post one = postService.getOne(lambdaUpdateWrapper);

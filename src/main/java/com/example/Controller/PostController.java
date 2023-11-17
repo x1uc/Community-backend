@@ -30,7 +30,7 @@ public class PostController {
     }
 
     @GetMapping
-    public Result getPost(Long id) {
+    public Result getPost(Long id) throws InterruptedException {
         return postService.getContent(id);
     }
 
@@ -43,6 +43,8 @@ public class PostController {
     public Result judgeLike(HttpServletRequest request, Long id) {
         return postService.judgeLike(request, id);
     }
+
+
 
 
 }

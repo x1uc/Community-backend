@@ -1,2 +1,9 @@
-package com.example.DTO;public class MyLikeDto {
+package com.example.DTO;
+
+import lombok.Data;
+
+@Data
+public class MyLikeDto {
+    Long entityId;
+    String title;
 }

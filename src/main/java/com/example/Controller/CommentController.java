@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
-@RequestMapping("comment")
+@RequestMapping("/comment")
 @Slf4j
 public class CommentController {
     int cnt = 0;

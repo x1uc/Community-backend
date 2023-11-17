@@ -62,5 +62,11 @@ public class MessageController {
         return messageService.MessageUnComment(user);
     }
 
+    @PostMapping("/MyLike")
+    public Result GetMyLikePost(HttpServletRequest httpServletRequest, @RequestBody Map<String, String> map) {
+        Integer currentPage = Integer.valueOf(map.get("currentPage"));
+        Integer pageSize = Integer.valueOf(map.get("pageSize"));
+        return messageService.getMyLikePost(httpServletRequest, currentPage, pageSize);
+    }
 
 }
