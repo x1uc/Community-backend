@@ -23,4 +23,5 @@ public class Post {
     private Integer commentCount;
     private Integer liked;
     private double score;
+    private Long userId;
 }

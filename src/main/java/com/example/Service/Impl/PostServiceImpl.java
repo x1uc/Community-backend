@@ -76,14 +76,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (request.getHeader("authorization") == null || request.getHeader("authorization").isEmpty()) {
             return new Result().fail("请先登录，当前未登录或登录过期");
         }
-        String key = request.getHeader("authorization");
-        String email = (String) stringRedisTemplate.opsForHash().get(request.getHeader(("authorization")), "email");
+        User user = getUser.GET_USER(request);
         Post post = new Post();
         post.setTitle(title);
-        post.setUserEmail(email);
+        post.setUserEmail(user.getEmail());
         post.setContent(content);
         post.setCreateTime(LocalDateTime.now());
         post.setType(1); // 设置类型为文章类型
+        post.setUserId(user.getId());
         save(post);
         return new Result<>().success("发布成功！");
     }
