@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.Config.RedissonConfig;
@@ -91,14 +92,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     public Result getPage(Integer pageSize, Integer currentPage) {
         Page page = new Page(currentPage, pageSize);
+        page.addOrder(OrderItem.desc("create_time"));
         this.page(page);
         List<Post> records = page.getRecords();
 
         List<PagePostDto> pagePostDto = records.stream().map(item -> {
             User user = postToUser.run(item.getId());
             PagePostDto postDto = new PagePostDto();
-
-
             postDto.setAvatar(user.getAvatar());
             postDto.setUserName(user.getUsername());
             postDto.setTitle(item.getTitle());
@@ -182,7 +182,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             }
             String postContent = JSONUtil.toJsonStr(postContentDto);
             stringRedisTemplate.opsForValue().set(POST_BLOG_CACHE + id, postContent);
-            stringRedisTemplate.expire(POST_BLOG_CACHE + id, 10, TimeUnit.MINUTES);
+            stringRedisTemplate.expire(POST_BLOG_CACHE + id, 5, TimeUnit.MINUTES);
             return new Result(200, "", postContentDto);
         } finally {
             lock.unlock();

@@ -24,7 +24,7 @@ public class MailTest {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage);
         mimeMessageHelper.setFrom(from);
-        mimeMessageHelper.setTo("ergouli848@gmail.com");
+        mimeMessageHelper.setTo("1667790674@qq.com.com");
         mimeMessageHelper.setSubject("what fuck");
         mimeMessageHelper.setText("213123", true);
         mailSender.send((mimeMessageHelper.getMimeMessage()));

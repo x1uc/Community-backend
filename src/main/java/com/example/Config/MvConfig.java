@@ -1,6 +1,7 @@
 package com.example.Config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -13,6 +14,9 @@ import java.util.List;
 @Configuration
 @Slf4j
 public class MvConfig extends WebMvcConfigurationSupport {
+
+    @Value("${file.path}")
+    private String path;
 
     @Override
     protected void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
@@ -31,6 +35,7 @@ public class MvConfig extends WebMvcConfigurationSupport {
     @Override
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
+        registry.addResourceHandler("/picture/**").addResourceLocations("file:" + path);
     }
 
 }

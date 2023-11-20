@@ -51,8 +51,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Resource
     private GetUser getUser;
 
-    @Value("${resource.path}")
-    private String class_path;
+    @Value("${file.path}")
+    private String picture_path;
 
     @Override
     public Result login(Map<String, String> map) {
@@ -100,15 +100,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("verifyCode = {}", verifyCode);
 
         String RedisKey = RedisConstant.CHECK_CACHE + email;
-
         stringRedisTemplate.opsForValue().set(RedisKey, verifyCode.toString());
-
+        stringRedisTemplate.expire(RedisKey, 20, TimeUnit.MINUTES);
         try {
-            mailUtil.sendMail(email, "SYUCTACM_注册验证码", "<h1>你的验证码是" + verifyCode.toString() + "有效期五分钟</h1>");
+            mailUtil.sendMail(email, "SYUCTACM_注册验证码", "<h1>你的验证码是" + verifyCode.toString() + "有效期20分钟</h1><div></div>欢迎假如SYUCT_ACM");
         } catch (Exception e) {
             return new Result().fail("邮箱不正确，无法发送邮件！");
         }
-        return new Result().success("nice");
+        return new Result().success("验证码已发送，未收到请检查垃圾箱！");
     }
 
     @Override
@@ -171,12 +170,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             return new Result().fail("未登录");
         }
-        String path = class_path;
-        String dir_path = path + "/src/main/resources/static/picture/";
+        //创建图片位置路径
+        String path = picture_path;
+        String dir_path = path;
 
         File targetFile = new File(dir_path);
         if (!targetFile.exists())
             targetFile.mkdirs();
+
+        log.error("文件目录时{}", targetFile);
+
 
         String img_path = dir_path;
         String uuid = String.valueOf(UUID.randomUUID(true));
@@ -187,17 +190,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return new Result().fail("照片格式错误");
         }
 
+        //保存图片到 picture_path 目录下
         byte[] fileBytes = file.getBytes();
         FileOutputStream out = new FileOutputStream(img_path + suffix);
         out.write(fileBytes);
         out.flush();
         out.close();
-
+        //保存到数据库中
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getId, user.getId());
-        lambdaUpdateWrapper.setSql("avatar = " + "\'" + "static/picture/" + uuid + suffix + "\'");
+        lambdaUpdateWrapper.setSql("avatar = " + "\'" + "picture/" + uuid + suffix + "\'");
         this.update(lambdaUpdateWrapper);
         return new Result().success("更换成功！");
     }
-
 }

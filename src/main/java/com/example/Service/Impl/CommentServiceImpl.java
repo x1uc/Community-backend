@@ -1,5 +1,6 @@
 package com.example.Service.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.Entity.Comment;
@@ -97,7 +98,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         message.setType(2);
         produce.producerMessage("comment", message);
 
-        stringRedisTemplate.delete(POST_BLOG_CACHE);
+        stringRedisTemplate.delete(POST_BLOG_CACHE + PostId);
         this.save(comment);
 
         return new Result().success("评论成功！");
@@ -123,7 +124,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         //设置评论内容
         comment.setContent(content);
         //设置 回复的主题对象
-        comment.setEntityId(EntityId);
+        comment.setEntityId(EntityId); //被评论的评论的ID
         comment.setCreateTime(LocalDateTime.now());
         comment.setEntityType(2);
 
@@ -136,7 +137,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         message.setType(2);
         produce.producerMessage("comment", message);
 
-        stringRedisTemplate.delete(POST_BLOG_CACHE);
+
+        LambdaQueryWrapper<Comment> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(Comment::getId, EntityId);
+        Comment one = this.getOne(lambdaQueryWrapper);
+        stringRedisTemplate.delete(POST_BLOG_CACHE + one.getEntityId());
+
+
         this.save(comment);
 
         return new Result().success("评论成功");

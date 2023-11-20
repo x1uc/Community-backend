@@ -13,6 +13,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/post")
 @ResponseBody
+@CrossOrigin
 public class PostController {
     @Resource
     private PostService postService;
