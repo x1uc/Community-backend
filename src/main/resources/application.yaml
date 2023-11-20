@@ -20,10 +20,10 @@ spring:
     virtual-host: /
     username: root
     password: 123123
-
+#填上你的邮箱和验证码
   mail:
-    username: 704379838@qq.com
-    password: hlkytayysxynbcaa
+    username: email@qq.com
+    password: xxxxxxxxxxx
     host: smtp.qq.com
 
 logging:
